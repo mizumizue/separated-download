@@ -1,4 +1,4 @@
-module separated-download
+module github.com/mizumizue/separated-downloader
 
 go 1.16
 

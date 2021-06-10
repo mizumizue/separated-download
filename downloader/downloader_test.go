@@ -3,9 +3,9 @@ package downloader
 import (
 	"errors"
 	"fmt"
+	mockdownloader "github.com/mizumizue/separated-downloader/mock/downloader"
 	"net/http"
 	"reflect"
-	mockdownloader "separated-download/mock/downloader"
 	"testing"
 
 	"github.com/golang/mock/gomock"
