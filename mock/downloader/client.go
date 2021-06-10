@@ -2,9 +2,10 @@
 // Source: ./downloader/client.go
 
 // Package mock_downloader is a generated GoMock package.
-package mockdownloader
+package mock_downloader
 
 import (
+	io "io"
 	http "net/http"
 	reflect "reflect"
 
@@ -35,61 +36,36 @@ func (m *MockIHttpClient) EXPECT() *MockIHttpClientMockRecorder {
 }
 
 // Do mocks base method.
-func (m *MockIHttpClient) Do(req *http.Request) (*http.Response, error) {
+func (m *MockIHttpClient) Do(req *http.Request, headers ...*http.Header) (*http.Response, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Do", req)
+	varargs := []interface{}{req}
+	for _, a := range headers {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Do", varargs...)
 	ret0, _ := ret[0].(*http.Response)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Do indicates an expected call of Do.
-func (mr *MockIHttpClientMockRecorder) Do(req interface{}) *gomock.Call {
+func (mr *MockIHttpClientMockRecorder) Do(req interface{}, headers ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockIHttpClient)(nil).Do), req)
+	varargs := append([]interface{}{req}, headers...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockIHttpClient)(nil).Do), varargs...)
 }
 
 // GenerateRequest mocks base method.
-func (m *MockIHttpClient) GenerateRequest(url string) (*http.Request, error) {
+func (m *MockIHttpClient) GenerateRequest(method, url string, body io.Reader) (*http.Request, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateRequest", url)
+	ret := m.ctrl.Call(m, "GenerateRequest", method, url, body)
 	ret0, _ := ret[0].(*http.Request)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GenerateRequest indicates an expected call of GenerateRequest.
-func (mr *MockIHttpClientMockRecorder) GenerateRequest(url interface{}) *gomock.Call {
+func (mr *MockIHttpClientMockRecorder) GenerateRequest(method, url, body interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateRequest", reflect.TypeOf((*MockIHttpClient)(nil).GenerateRequest), url)
-}
-
-// Get mocks base method.
-func (m *MockIHttpClient) Get(url string) (*http.Response, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", url)
-	ret0, _ := ret[0].(*http.Response)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Get indicates an expected call of Get.
-func (mr *MockIHttpClientMockRecorder) Get(url interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockIHttpClient)(nil).Get), url)
-}
-
-// Head mocks base method.
-func (m *MockIHttpClient) Head(url string) (*http.Response, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Head", url)
-	ret0, _ := ret[0].(*http.Response)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Head indicates an expected call of Head.
-func (mr *MockIHttpClientMockRecorder) Head(url interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Head", reflect.TypeOf((*MockIHttpClient)(nil).Head), url)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateRequest", reflect.TypeOf((*MockIHttpClient)(nil).GenerateRequest), method, url, body)
 }

@@ -3,10 +3,11 @@ package downloader
 import (
 	"errors"
 	"fmt"
-	mockdownloader "github.com/mizumizue/separated-downloader/mock/downloader"
 	"net/http"
 	"reflect"
 	"testing"
+
+	mockdownloader "github.com/mizumizue/separated-downloader/mock/downloader"
 
 	"github.com/golang/mock/gomock"
 )
@@ -52,7 +53,7 @@ func TestDownloader_Download(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name: "Case1: Unknown Accept-Range unit",
+			name: "Case1: Unknown Accept-rrange unit",
 			args: args{
 				url: "https://example.com",
 			},
@@ -60,7 +61,7 @@ func TestDownloader_Download(t *testing.T) {
 				header := http.Header{}
 				header.Add("Accept-Ranges", "MB")
 				url := "https://example.com"
-				mock.EXPECT().Head(url).Return(&http.Response{
+				mock.EXPECT().Do(url).Return(&http.Response{
 					Header: header,
 				}, nil)
 			},
@@ -75,7 +76,7 @@ func TestDownloader_Download(t *testing.T) {
 			},
 			prepare: func(mock *mockdownloader.MockIHttpClient) {
 				errUrl := "hoge"
-				mock.EXPECT().Head(errUrl).Return(nil, errors.New("request failed... "))
+				mock.EXPECT().Do(errUrl).Return(nil, errors.New("request failed... "))
 			},
 			want:        nil,
 			wantErr:     true,
@@ -91,7 +92,7 @@ func TestDownloader_Download(t *testing.T) {
 				header := http.Header{}
 				header.Add("Accept-Ranges", "bytes")
 				header.Add("Content-Length", "mogemoge")
-				mock.EXPECT().Head(url).Return(&http.Response{
+				mock.EXPECT().Do(url).Return(&http.Response{
 					Header: header,
 				}, nil)
 			},
@@ -131,7 +132,7 @@ func TestDownloader_fetchChunk(t *testing.T) {
 	}
 	type args struct {
 		url string
-		r   Range
+		r   rrange
 	}
 	tests := []struct {
 		name        string
@@ -150,7 +151,7 @@ func TestDownloader_fetchChunk(t *testing.T) {
 			},
 			prepare: func(mock *mockdownloader.MockIHttpClient) {
 				url := "https://example.com"
-				mock.EXPECT().GenerateRequest(url).Return(nil, http.ErrServerClosed)
+				mock.EXPECT().GenerateRequest(http.MethodHead, url, nil).Return(nil, http.ErrServerClosed)
 			},
 			want:        nil,
 			want1:       0,
@@ -161,7 +162,7 @@ func TestDownloader_fetchChunk(t *testing.T) {
 			name: "Case2: ErrHttpRequestFailed",
 			args: args{
 				url: "https://example.com",
-				r: Range{
+				r: rrange{
 					start: 0,
 					end:   500,
 				},
@@ -169,8 +170,8 @@ func TestDownloader_fetchChunk(t *testing.T) {
 			prepare: func(mock *mockdownloader.MockIHttpClient) {
 				url := "https://example.com"
 				req, _ := http.NewRequest(http.MethodGet, url, nil)
-				req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", 0, 500))
-				mock.EXPECT().GenerateRequest(url).Return(req, nil)
+				req.Header.Set("rrange", fmt.Sprintf("bytes=%d-%d", 0, 500))
+				mock.EXPECT().GenerateRequest(http.MethodHead, url, nil).Return(req, nil)
 				mock.EXPECT().Do(req).Return(nil, ErrHttpRequestFailed)
 			},
 			want:        nil,
@@ -182,7 +183,7 @@ func TestDownloader_fetchChunk(t *testing.T) {
 			name: "Case3: ErrHttpBadStatusCode",
 			args: args{
 				url: "https://example.com",
-				r: Range{
+				r: rrange{
 					start: 0,
 					end:   500,
 				},
@@ -190,8 +191,8 @@ func TestDownloader_fetchChunk(t *testing.T) {
 			prepare: func(mock *mockdownloader.MockIHttpClient) {
 				url := "https://example.com"
 				req, _ := http.NewRequest(http.MethodGet, url, nil)
-				req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", 0, 500))
-				mock.EXPECT().GenerateRequest(url).Return(req, nil)
+				req.Header.Set("rrange", fmt.Sprintf("bytes=%d-%d", 0, 500))
+				mock.EXPECT().GenerateRequest(http.MethodHead, url, nil).Return(req, nil)
 				mock.EXPECT().Do(req).Return(&http.Response{
 					Status:     "BadRequest",
 					StatusCode: http.StatusBadRequest,

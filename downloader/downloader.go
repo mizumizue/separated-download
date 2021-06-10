@@ -31,7 +31,7 @@ type Downloader struct {
 	config DownloadConfig
 }
 
-type Range struct {
+type rrange struct {
 	start int
 	end   int
 }
@@ -49,8 +49,12 @@ func NewDownloader(c IHttpClient, cc ...DownloadConfig) *Downloader {
 	}
 }
 
-func (d *Downloader) Download(url string) (*File, error) {
-	resp, err := d.c.Head(url)
+func (d *Downloader) Download(url string, headers ...*http.Header) (*File, error) {
+	hr, err := d.c.GenerateRequest(http.MethodHead, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("%w, detail: %v", ErrGenerateHttpRequest, err)
+	}
+	resp, err := d.c.Do(hr, headers...)
 	if err != nil {
 		return nil, fmt.Errorf("%w, detail: %v", ErrHeadRequestFailed, err)
 	}
@@ -77,9 +81,9 @@ func (d *Downloader) Download(url string) (*File, error) {
 	for {
 		var hc int
 		wg.Add(1)
-		go func(num int) {
+		go func(num int, header2 ...*http.Header) {
 			defer wg.Done()
-			r := Range{
+			r := rrange{
 				start: num * bytesPerProcess,
 				end:   int(math.Min(float64((num+1)*bytesPerProcess), float64(cl))),
 			}
@@ -93,7 +97,7 @@ func (d *Downloader) Download(url string) (*File, error) {
 			}
 			chunks[num] = data
 			hc = si
-		}(count)
+		}(count, headers...)
 		count++
 		if count >= loopCount || hc == http.StatusOK {
 			break
@@ -108,13 +112,13 @@ func (d *Downloader) Download(url string) (*File, error) {
 	}, nil
 }
 
-func (d *Downloader) fetchChunk(url string, r Range) ([]byte, int, error) {
-	req, err := d.c.GenerateRequest(url)
+func (d *Downloader) fetchChunk(url string, r rrange, headers ...*http.Header) ([]byte, int, error) {
+	req, err := d.c.GenerateRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, fmt.Errorf("%w, detail: %v", ErrGenerateHttpRequest, err)
 	}
-	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", r.start, r.end))
-	resp, err := d.c.Do(req)
+	req.Header.Set("range", fmt.Sprintf("bytes=%d-%d", r.start, r.end))
+	resp, err := d.c.Do(req, headers...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("%w, detail: %v", ErrHttpRequestFailed, err)
 	}

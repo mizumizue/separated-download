@@ -1,12 +1,13 @@
 package downloader
 
-import "net/http"
+import (
+	"io"
+	"net/http"
+)
 
 type IHttpClient interface {
-	GenerateRequest(url string) (*http.Request, error)
-	Head(url string) (resp *http.Response, err error)
-	Get(url string) (resp *http.Response, err error)
-	Do(req *http.Request) (resp *http.Response, err error)
+	GenerateRequest(method string, url string, body io.Reader) (*http.Request, error)
+	Do(req *http.Request, headers ...*http.Header) (*http.Response, error)
 }
 
 type HttpClient struct {
@@ -17,6 +18,15 @@ func NewHttpClient(client *http.Client) IHttpClient {
 	return &HttpClient{Client: client}
 }
 
-func (c *HttpClient) GenerateRequest(url string) (*http.Request, error) {
-	return http.NewRequest(http.MethodGet, url, nil)
+func (hc *HttpClient) GenerateRequest(method string, url string, body io.Reader) (*http.Request, error) {
+	return http.NewRequest(method, url, body)
+}
+
+func (hc *HttpClient) Do(req *http.Request, headers ...*http.Header) (*http.Response, error) {
+	if len(headers) > 0 && headers[0] != nil {
+		for key, header := range headers[0].Clone() {
+			req.Header.Set(key, header[0])
+		}
+	}
+	return hc.Do(req)
 }
